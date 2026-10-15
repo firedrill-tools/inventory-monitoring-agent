@@ -3,8 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.13" },
-  "scripts": { "build": "tsc -p tsconfig.json", "test": "npm run build && node --test dist/tests/*.test.js", "inventory": "node dist/src/cli.js" },
-  "dependencies": { "@mastra/core": "1.77.0", "zod": "4.6.7" },
-  "devDependencies": { "@types/node": "24.0.0", "typescript": "5.9.3" }
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "postinstall": "node scripts/patch-argparse.cjs",
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "inventory": "node dist/src/cli.js"
+  },
+  "dependencies": {
+    "@mastra/core": "1.77.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.0.0",
+    "typescript": "5.9.3"
+  },
+  "overrides": {
+    "gray-matter@4": {
+      "js-yaml@3": {
+        "argparse": "2.0.1"
+      }
+    }
+  }
 }

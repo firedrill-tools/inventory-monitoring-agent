@@ -24,6 +24,6 @@ The Mastra tools inspect current item state, evaluate an alert and prepare a rep
 
 Reset with a fresh `workspace.json` copied from `fixtures/starter.json`. The local JSON workspace is designed for sequential events, not concurrent production inventory. `npm test` covers the Mastra tool boundary, duplicate/stale events, effective stock, alert cycles, threshold changes and draft invalidation. These are offline checks, not a live Gemini run. Live provider and new Firedrill integration proofs remain pending.
 
-`npm audit` currently reports five moderate advisories in Mastra's transitive `gray-matter → js-yaml → argparse → sprintf-js` chain. `npm audit --audit-level=high` passes; a compatible upstream fix is pending. This private repository has no license pending portfolio publication decisions.
+The scoped argparse override removes the inherited `sprintf-js` dependency; a guarded install-time repair preserves js-yaml's legacy version option. See [scripts/README.md](scripts/README.md). Fresh `npm ci`, all 7 checks and `npm audit` pass (zero findings at the 2026-10-15 snapshot). This private repository has no license pending portfolio publication decisions.
 
 Explore related applications in the [Firedrill example catalog](https://github.com/firedrill-tools/firedrill-example-catalog). Product and setup references: [Firedrill](https://firedrill.run/) and the [official developer documentation](https://docs.firedrill.run/). Use documentation matching the qualified release; this repository records its current integration limits above.
