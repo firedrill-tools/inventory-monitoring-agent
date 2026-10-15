@@ -1,0 +1,10 @@
+{
+  "items": [
+    { "sku": "SKU-101", "name": "Elm desk lamp", "quantity": 12, "onOrder": 0, "threshold": 10, "target": 24, "sequence": 100, "revision": 1, "alertActive": false },
+    { "sku": "SKU-102", "name": "Ceramic vase", "quantity": 3, "onOrder": 4, "threshold": 5, "target": 12, "sequence": 50, "revision": 1, "alertActive": false },
+    { "sku": "SKU-103", "name": "Linen throw", "quantity": 8, "onOrder": 0, "threshold": 6, "target": 18, "sequence": 20, "revision": 1, "alertActive": false }
+  ],
+  "events": [],
+  "alerts": [],
+  "drafts": []
+}
