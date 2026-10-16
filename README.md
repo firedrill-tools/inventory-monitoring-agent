@@ -37,3 +37,16 @@ Each inventory event updates its low-stock cycle immediately. A recovery closes 
 A Workspace pins its original file descriptor until explicit close and checks physical source/root identity. Exclusive random0600staging and flushed replacement reject stale writers; source replacement and receipt publication are separate effects. Library callers must call Workspace.close() exactly once in a finally block. The private CLI and tests close their source owners.
 
 This42check source checkpoint does not qualify normal model write authority. Genuine scoped current observations/exact caller intent, owned native Mastra/Gemini lifecycle/evidence, twelve coherent private cases/reset and fresh distributions are the next tasks in [PLAN.md](PLAN.md). The existing makeTools/Workspace methods remain explicit trusted synthetic-human/test seams until the managed normal boundary is integrated.
+
+## Managed source and scoped tools
+
+The managed backend adds genuine current read authority, exact caller targets and a separate write gate. Private inspection yields an initial intent; it never yields a model read capability. Normal tool handlers retain their own opaque read proofs privately and require a fresh inspection between alert evaluation and draft preparation. Source decisions derive current eligibility, active cycle and units atomically and retain exact before/after context and applied/unchanged/denied results. Real synthetic-human events can commit independently and invalidate older reads. Scope closes durably before draining; cancellation cannot block control-only revocation. Corrupt schema/header/locks remain unconfirmed closure, and damaged business/history is never repaired.
+
+```sh
+npm run build
+npm run inventory:state -- init --db workspace/inventory.db
+npm run inventory:state -- event --db workspace/inventory.db --event-json '{"id":"EV-101","sku":"SKU-101","sequence":101,"kind":"sale","value":4}'
+npm run inventory:state -- inspect --db workspace/inventory.db --sku SKU-101
+```
+
+The database retains literal original fixture, source identity/UUID, exact SQLite schema and complete current replay. It owns an actual DatabaseSync and a retained source descriptor; library callers must close once. Init is exclusive. The67check source/backend/actual tool/private CLI checkpoint still leaves normal native Gemini execution, lifecycle evidence, twelve private cases and fresh distributions active. `makeManagedTools` is the intended normal tool boundary; the existing launch is replaced in the next task.

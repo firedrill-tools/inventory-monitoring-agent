@@ -10,7 +10,8 @@
     "postinstall": "node scripts/patch-argparse.cjs",
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/tests/*.test.js",
-    "inventory": "node dist/src/cli.js"
+    "inventory": "node dist/src/cli.js",
+    "inventory:state": "node dist/src/managed-cli.js"
   },
   "dependencies": {
     "@mastra/core": "1.77.0",
