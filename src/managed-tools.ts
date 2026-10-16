@@ -15,6 +15,8 @@ export function makeManagedTools(
   source: ManagedWorkspace,
   credential: Credential,
   hooks: {
+    beforeCall?: (name: string, args: Record<string, unknown>) => void;
+    onError?: (error: unknown) => void;
     onRead?: (value: Read) => void;
     onDecision?: (value: Decision) => void;
   } = {},
@@ -36,6 +38,7 @@ export function makeManagedTools(
       "Read actual current inventory for selected caller SKUs. Reinspect before each evaluation or draft and after any event. Read capabilities stay private.",
     inputSchema: z.object({ sku: skuSchema.optional() }).strict(),
     execute: async ({ sku }) => {
+      hooks.beforeCall?.("inspectInventory", sku === undefined ? {} : { sku });
       const op = source.currentOperation(credential),
         targets =
           sku === undefined ? op.intent.targets.map((t) => t.sku) : [sku];
@@ -61,7 +64,10 @@ export function makeManagedTools(
     description:
       "Evaluate selected current effective stock against its current threshold and record at most one alert per low-stock cycle. Requires own fresh inspection and separate write authorization.",
     inputSchema: z.object({ sku: skuSchema }).strict(),
-    execute: async ({ sku }) => mutate({ kind: "evaluate", args: { sku } }),
+    execute: async ({ sku }) => {
+      hooks.beforeCall?.("evaluateInventory", { sku });
+      return mutate({ kind: "evaluate", args: { sku } });
+    },
   });
   const prepareReplenishment = createTool({
     id: "prepare-replenishment",
@@ -77,8 +83,25 @@ export function makeManagedTools(
           .max(Number.MAX_SAFE_INTEGER),
       })
       .strict(),
-    execute: async ({ sku, expectedRevision }) =>
-      mutate({ kind: "prepare", args: { sku, expectedRevision } }),
+    execute: async ({ sku, expectedRevision }) => {
+      hooks.beforeCall?.("prepareReplenishment", { sku, expectedRevision });
+      return mutate({ kind: "prepare", args: { sku, expectedRevision } });
+    },
   });
+  for (const tool of [
+    inspectInventory,
+    evaluateInventory,
+    prepareReplenishment,
+  ]) {
+    const execute = tool.execute!;
+    tool.execute = (async (...args: any[]) => {
+      try {
+        return await (execute as any)(...args);
+      } catch (error) {
+        hooks.onError?.(error);
+        throw error;
+      }
+    }) as typeof tool.execute;
+  }
   return { inspectInventory, evaluateInventory, prepareReplenishment };
 }
