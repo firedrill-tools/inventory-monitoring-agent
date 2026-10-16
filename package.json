@@ -14,7 +14,9 @@
     "inventory:state": "node dist/src/managed-cli.js"
   },
   "dependencies": {
+    "@ai-sdk/google": "2.0.85",
     "@mastra/core": "1.77.0",
+    "undici": "7.30.1",
     "zod": "4.6.7"
   },
   "devDependencies": {
