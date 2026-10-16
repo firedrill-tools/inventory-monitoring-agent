@@ -1,0 +1,30 @@
+# Inventory monitoring development plan
+
+## Goal and scope
+
+Complete the standalone Mastra/Gemini inventory application from portfolio project34. It observes synthetic sequential inventory events, checks effective stock and current thresholds, records one alert per low-stock cycle and prepares a local replenishment draft. No purchase order, supplier call, real stock movement or Firedrill runtime is implied. Preserve Mastra createTool boundaries and explicit write authorization. External enabled model/key/budget/semantic+billing, qualified new Firedrill cases, real connectors and publication/license remain parked.
+
+## Verified baseline
+
+Original f08e162b00a48d28a905ccaf29853a5884decef5 passes all7checks on Node24.16.0 in /tmp/firedrill-inventory-baseline-tests.log. Four business/tool tests preserve duplicate/stale events, ordinary low-stock cycles, on-order effective stock, threshold changes, stale revisions, draft supersession and read-only Mastra tools. Three dependency tests retain the scoped argparse/js-yaml compatibility repair. package-lock pins Mastra1.77.0 and Zod4.6.7.
+
+Private /tmp/firedrill-inventory-source-baseline.mjs and .json exercise actual original source over owned disposable synthetic files, without a model, provider, purchase or production data:
+
+- A low SKU creates ALT-1. Stock then recovers to20 and falls to8 before another evaluate. alertActive remains true through both actual events; evaluate reports already_alerted and never records the new low-stock cycle.
+- MAX_SAFE_INTEGER quantity/revision each increment to9007199254740992, which is unsafe.
+- A prior same-revision draft is manually changed to999999units and prepare accepts it as current.
+- Boolean quantity/revision are accepted and coerced to numeric5/2 by a receipt.
+- Duplicate original quantity keys silently normalize to the later value.
+- A source symlink is accepted for reading; save replaces the alias with a new regular file while leaving the old target unchanged. This forks the accepted source identity rather than changing the other file.
+
+These source observations are synthetic-human evidence only. They do not qualify original native Gemini completion behavior. Record the actual pinned SDK/public API and normal owned local HTTP baseline before claiming a native defect or fix.
+
+## Tasks
+
+1. **Next — complete source/event/cycle contract.** Preserve original starter bytes and useful ordinary tests. Read bounded regular unshared nonsymlink duplicate-aware fatalUTF8 JSON. Validate exact IDs, bounded text, safe quantities/effective sums/revisions/sequences, thresholds/targets and complete linked event/alert/draft snapshots. Reject malformed/contradictory/ambiguous source without repair. Derive low-stock cycle changes from each actual event, so recovery between evaluations closes the earlier cycle. Prevent unsafe stock/revision arithmetic, duplicate/stale event effects and fabricated or outdated draft reuse. Preserve literal no-op bytes. Keep synthetic event input separate from normal model authority and describe receipt/on-order semantics explicitly.
+2. **Pending — genuine scoped managed tools and intent.** Model writes require a separate write gate, exact caller SKU/target intent, an owned current operation and genuine own current observations. Derive alert/draft effects from current effective stock/threshold/cycle/revision; model prose or an integer revision alone is not authority. Bind complete decisions/current source/initial fixture/schema/physical identity, close scope durably before draining and preserve earlier effects. Maintain sequential source semantics and truthful busy rejection. Actual createTool functions must use the same managed boundary as the normal agent.
+3. **Pending — actual owned Mastra/Gemini runtime and evidence.** Inspect pinned APIs and primary provider/framework documentation. Use actual Agent.generate and actual provider SDK over bounded owned HTTP, with no fake model/client/tool substitute. Explicit enabled model/key/origin, no fallback/retry, exact outgoing requests, original native completion/tool IDs/function arguments/usage, bounded steps/bytes/tokens/deadline and before-SDK gating. Prepare private evidence before keys/resources; retain complete original source/requests/responses/unknown fields/tool reads/results/decisions and final valid or unknown state. Exercise real normal CLI, caller/deadline/parent cancellation and all three signals, partial construction and one-attempt failed closes/recording after actual effects. Counter provenance and unknown real cost/purchase remain explicit.
+4. **Pending — twelve coherent cases and private CLI.** Starter/busy/ambiguous/boundary worlds with substantial linked items, actual earlier events/alerts/drafts/current vs superseded states, coherent original snapshots and known/unknown provenance. Include recovery/reentry between evaluations, stale/repeated/conflicting events, changed thresholds/current on-order stock, restricted target scope, maximum safe arithmetic and hostile/Unicode text. Pinned model-free exclusive init/inspect/separate preserving reset must create fresh UUID/source/seed without imported runtime authority; refuse corrupt/missing/foreign/stripped controls, aliases/collisions/mutexes. Private case IDs/references/setup cannot enter model context.
+5. **Pending — complete distributions and independent gate.** Fresh locked complete and production-only installed npm/package archives outside checkout; full source/native/real SDK/tool/CLI suite, all12 installed case/reset paths, missing key, signals and late native failure preserving earlier effects. Verify packaged fixtures/scripts/runtime assets, unchanged full source byte/mode/hash manifest and repeated portable archive bytes. Require exact pushed Linux success and byte equality with the downloaded source artifact before independent completion. Then continue#35/#37/#38/#39. Do not reopen completed projects speculatively.
+
+Renewal project33 remains under rich-case/distribution qualification while this next-project baseline and plan are prepared. Portfolio34/40independent complete; no input blocks these independent tasks.
