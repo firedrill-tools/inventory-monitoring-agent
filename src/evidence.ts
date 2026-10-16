@@ -109,6 +109,7 @@ export class Receipt {
       sourceBlobs: {},
       sdk: [],
       acknowledgedEffects: [],
+      acknowledgedDecisions: [],
       runId,
       receiptPath: this.path,
       status: "prepared",

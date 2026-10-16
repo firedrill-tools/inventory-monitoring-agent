@@ -65,6 +65,7 @@ export type NativeOwner = {
   signal: AbortSignal;
   deadline: number;
   guard: () => void;
+  cancel: (reason: unknown) => void;
 };
 export class Native {
   readonly dispatcher: Pool;
@@ -274,15 +275,17 @@ export class Native {
     receipt.save();
     if (this.failure) throw this.failure;
     this.owner.guard();
-    const phase = AbortSignal.timeout(
-      Math.min(
-        30000,
-        Math.max(1, Math.ceil(this.owner.deadline - performance.now())),
-      ),
+    const phaseMs = Math.min(
+      30000,
+      Math.max(1, Math.ceil(this.owner.deadline - performance.now())),
+    );
+    const phaseDeadline = performance.now() + phaseMs;
+    const phaseTimer = setTimeout(
+      () => this.owner.cancel(new Error("native HTTP phase deadline exceeded")),
+      phaseMs,
     );
     const signal = AbortSignal.any([
       this.owner.signal,
-      phase,
       ...(init?.signal ? [init.signal] : []),
     ]);
     const chunks: Buffer[] = [];
@@ -375,6 +378,11 @@ export class Native {
         used: false,
         call,
       };
+      if (performance.now() >= phaseDeadline) {
+        const error = new Error("native HTTP phase deadline exceeded");
+        this.owner.cancel(error);
+        throw error;
+      }
       call.originalCompletion = structuredClone(qualified.completion);
       call.status = "qualified";
       if (this.failure) throw this.failure;
@@ -397,6 +405,7 @@ export class Native {
       } catch {}
       throw error;
     } finally {
+      clearTimeout(phaseTimer);
       call.finishedAt = new Date().toISOString();
     }
   }
@@ -418,7 +427,40 @@ export class Native {
     current.call.sdkToolEnteredAt = new Date().toISOString();
     this.owner.receipt.save();
   }
+  returned(name: string, args: Record<string, unknown>, result: unknown) {
+    const current = this.current;
+    if (
+      !current ||
+      !current.used ||
+      current.completion.kind !== "tool" ||
+      current.completion.action.name !== name ||
+      canonical(current.completion.action.args) !== canonical(args)
+    )
+      throw new Error("actual tool return has no own original function");
+    current.call.actualToolResult = structuredClone(result);
+    current.call.actualToolStatus = "returned";
+  }
   step(step: any) {
+    if (step.finishReason === "error") {
+      this.owner.receipt.data.sdk.push({
+        call: this.owner.receipt.data.calls.at(-1)?.number ?? null,
+        status: "error",
+        finishReason: "error",
+        usage: structuredClone(step.usage ?? null),
+        toolCalls: structuredClone(step.toolCalls ?? []),
+        toolResults: structuredClone(step.toolResults ?? []),
+        error: step.error ? errorInfo(step.error) : null,
+      });
+      try {
+        this.owner.receipt.save();
+      } catch {}
+      if (this.failure) throw this.failure;
+      this.owner.guard();
+      throw new Error(
+        "actual SDK reported an error before completing its original native response",
+        { cause: step.error },
+      );
+    }
     if (this.failure) throw this.failure;
     this.owner.guard();
     const current = this.current;
@@ -455,6 +497,7 @@ export class Native {
       finishReason: step.finishReason,
       text: step.text ?? null,
       toolCalls: structuredClone(items),
+      toolResults: structuredClone(step.toolResults ?? []),
       usage: structuredClone(step.usage ?? null),
       originalResponseId: current.completion.responseId,
       reportedNativeFunctionId:

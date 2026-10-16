@@ -17,6 +17,11 @@ export function makeManagedTools(
   hooks: {
     beforeCall?: (name: string, args: Record<string, unknown>) => void;
     onError?: (error: unknown) => void;
+    afterCall?: (
+      name: string,
+      args: Record<string, unknown>,
+      result: unknown,
+    ) => void;
     onRead?: (value: Read) => void;
     onDecision?: (value: Decision) => void;
   } = {},
@@ -88,15 +93,17 @@ export function makeManagedTools(
       return mutate({ kind: "prepare", args: { sku, expectedRevision } });
     },
   });
-  for (const tool of [
+  for (const [name, tool] of Object.entries({
     inspectInventory,
     evaluateInventory,
     prepareReplenishment,
-  ]) {
+  })) {
     const execute = tool.execute!;
     tool.execute = (async (...args: any[]) => {
       try {
-        return await (execute as any)(...args);
+        const result = await (execute as any)(...args);
+        hooks.afterCall?.(name, args[0], result);
+        return result;
       } catch (error) {
         hooks.onError?.(error);
         throw error;

@@ -1,8 +1,11 @@
 /** Normal actual Agent/Google SDK/HTTP over a genuine scoped managed source. */
 import { test, type TestContext } from "node:test";
 import assert from "node:assert/strict";
+import { DatabaseSync } from "node:sqlite";
+import { Native } from "../src/native.js";
+import { readdirSync, renameSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
-import { createServer } from "node:http";
+import { createServer, type ServerResponse } from "node:http";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -23,7 +26,12 @@ const finalText =
   "Current selected inventory has one local replenishment draft. No purchase was placed.";
 async function setup(
   t: TestContext,
-  mutate: (value: any, n: number, source: ManagedWorkspace) => any = (v) => v,
+  mutate: (
+    value: any,
+    n: number,
+    source: ManagedWorkspace,
+    reply: ServerResponse,
+  ) => any = (v) => v,
 ) {
   const root = mkdtempSync(join(tmpdir(), "inventory-normal-native-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -85,9 +93,13 @@ async function setup(
         },
         n,
         source,
+        res,
       );
-      res.writeHead(200, {
-        "content-type": "application/json",
+      if (value === undefined) return;
+      res.writeHead(res.statusCode, {
+        "content-type": String(
+          res.getHeader("content-type") ?? "application/json",
+        ),
         "x-goog-request-id": "owned-" + n,
       });
       res.end(typeof value === "string" ? value : JSON.stringify(value));
@@ -516,4 +528,449 @@ test("caller mutation after launch cannot change original task or reported write
   assert.equal(receipt.task, originalTask);
   assert.equal(receipt.allowWrites, true);
   assert.equal(receipt.operation.allowWrites, true);
+});
+
+test("actual readonly normal run can inspect but cannot create alert or draft", async (t) => {
+  const e = await setup(t),
+    result = await runMonitor({ ...e.options, allowWrites: false });
+  assert.equal(result.status, "read_only");
+  assert.equal(result.business.workflowComplete, false);
+  assert.equal(result.business.inspectionComplete, true);
+  const current = e.source.snapshot();
+  assert.equal(current.business.alerts.length, 0);
+  assert.equal(current.business.drafts.length, 0);
+  assert.equal(current.records.decisions.length, 1);
+  const receipt = JSON.parse(readFileSync(result.receiptPath, "utf8"));
+  assert.equal(
+    receipt.actions.filter(
+      (a: any) => a.result?.error === "writes_not_authorized",
+    ).length,
+    2,
+  );
+  assert.equal(
+    receipt.calls.filter(
+      (c: any) => c.actualToolResult?.error === "writes_not_authorized",
+    ).length,
+    2,
+  );
+  assert.equal(e.requests.length, 6);
+});
+
+test("real inventory recovery during provider HTTP invalidates old read and current policy defers draft", async (t) => {
+  const e = await setup(t, (v, n, s) => {
+    if (n === 2)
+      s.event({
+        id: "EV-RECOVER",
+        sku: "SKU-101",
+        sequence: 102,
+        kind: "stocktake",
+        value: 20,
+      });
+    if (n === 6)
+      v.candidates[0].content.parts[0].text =
+        "Current stock recovered; no replenishment draft is required.";
+    return v;
+  });
+  const result = await runMonitor(e.options);
+  assert.equal(result.status, "completed");
+  assert.equal(result.business.workflowComplete, true);
+  assert.equal(result.business.items[0].quantity, 20);
+  assert.equal(result.business.alerts.length, 0);
+  assert.equal(result.business.drafts.length, 0);
+  assert.equal(e.requests.length, 6);
+});
+
+test("real recording path failure after committed alert preserves memory evidence and parked original file", async (t) => {
+  let parked: string | undefined;
+  const e = await setup(t, (v, n) => {
+    if (n === 3) {
+      const [runId] = readdirSync(e.options.outputRoot);
+      parked = join(e.root, "parked-evidence");
+      renameSync(join(e.options.outputRoot, runId), parked);
+    }
+    return v;
+  });
+  let caught: any;
+  try {
+    await runMonitor(e.options);
+  } catch (error) {
+    caught = error;
+  }
+  assert.equal(caught.evidence.status, "failed");
+  assert.equal(caught.evidence.durableStatus, "unknown");
+  assert.equal(caught.evidence.acknowledgedEffects.length, 1);
+  assert.equal(caught.evidence.cleanupConfirmed, true);
+  assert.ok(parked);
+  assert.ok(JSON.parse(readFileSync(join(parked!, "receipt.json"), "utf8")));
+  const source = e.source.snapshot();
+  assert.equal(source.business.alerts.length, 1);
+  assert.equal(source.business.drafts.length, 0);
+  assert.equal(source.records.operations[0].status, "closed");
+});
+
+test("corrupt actual current source after alert is unknown at final inspection and is never repaired", async (t) => {
+  const e = await setup(t, (v, n, s) => {
+    if (n === 3) {
+      const db = new DatabaseSync(s.path);
+      try {
+        db.exec("UPDATE business SET document='{}'");
+      } finally {
+        db.close();
+      }
+    }
+    return v;
+  });
+  let caught: any;
+  try {
+    await runMonitor(e.options);
+  } catch (error) {
+    caught = error;
+  }
+  assert.equal(caught.evidence.status, "failed");
+  assert.equal(caught.evidence.observedBusiness.status, "unknown");
+  assert.equal(caught.evidence.observedBusiness.workflowComplete, false);
+  assert.equal(caught.evidence.acknowledgedEffects.length, 1);
+  assert.equal(caught.evidence.cleanupConfirmed, true);
+  assert.throws(() => e.source.snapshot());
+  const db = new DatabaseSync(e.source.path, { readOnly: true });
+  try {
+    assert.equal(
+      db.prepare("SELECT document FROM business").get()!.document,
+      "{}",
+    );
+    const op = JSON.parse(
+      db.prepare("SELECT document FROM operations").get()!.document as string,
+    );
+    assert.equal(op.status, "closed");
+  } finally {
+    db.close();
+  }
+});
+
+test("real writer lock makes scope revocation unconfirmed after actual draft effects", async (t) => {
+  let lock: DatabaseSync | undefined;
+  const e = await setup(t, (v, n, s) => {
+    if (n === 6) {
+      lock = new DatabaseSync(s.path);
+      lock.exec("BEGIN IMMEDIATE");
+    }
+    return v;
+  });
+  let caught: any;
+  try {
+    try {
+      await runMonitor(e.options);
+    } catch (error) {
+      caught = error;
+    }
+    assert.equal(caught.evidence.status, "failed");
+    assert.equal(caught.evidence.cleanupConfirmed, false);
+    assert.equal(caught.evidence.cleanup.scopeClosed, false);
+    assert.equal(caught.evidence.acknowledgedEffects.length, 2);
+    assert.equal(caught.evidence.observedBusiness.workflowComplete, true);
+  } finally {
+    if (lock) {
+      lock.exec("ROLLBACK");
+      lock.close();
+    }
+  }
+  assert.equal(e.source.snapshot().records.operations[0].status, "active");
+  assert.equal(e.source.snapshot().business.drafts.length, 1);
+});
+
+test("one-attempt provider close failure cannot return success after actual draft effects", async (t) => {
+  const e = await setup(t),
+    original = Native.prototype.close;
+  let attempts = 0;
+  Native.prototype.close = async function () {
+    attempts++;
+    await original.call(this);
+    this.closed = false;
+    throw new Error("observed provider close failure");
+  };
+  let caught: any;
+  try {
+    try {
+      await runMonitor(e.options);
+    } catch (error) {
+      caught = error;
+    }
+  } finally {
+    Native.prototype.close = original;
+  }
+  assert.match(caught.message, /provider close failure/);
+  assert.equal(attempts, 1);
+  assert.equal(caught.evidence.cleanupConfirmed, false);
+  assert.equal(caught.evidence.cleanup.providerCloseAttempted, true);
+  assert.equal(caught.evidence.cleanup.providerClosed, false);
+  assert.equal(caught.evidence.cleanup.sourceDatabaseClosed, true);
+  assert.equal(caught.evidence.acknowledgedEffects.length, 2);
+  assert.equal(e.source.snapshot().records.operations[0].status, "closed");
+  assert.equal(e.source.snapshot().business.drafts.length, 1);
+});
+
+for (const fault of [
+  "replayed_id",
+  "refusal",
+  "nonfinite",
+  "oversize",
+  "wrong_candidate",
+  "multiple_functions",
+])
+  test(
+    "whole original " + fault + " never reaches an affected SDK tool",
+    async (t) => {
+      const e = await setup(t, (v, n) => {
+        if (n === 2) {
+          if (fault === "replayed_id") v.responseId = "owned-response-1";
+          if (fault === "refusal") v.promptFeedback = { blockReason: "SAFETY" };
+          if (fault === "nonfinite")
+            return JSON.stringify(v).replace(
+              '"promptTokenCount":10',
+              '"promptTokenCount":1e999',
+            );
+          if (fault === "oversize")
+            v.original_unknown = "x".repeat(1024 * 1024);
+          if (fault === "wrong_candidate") v.candidates[0].index = false;
+          if (fault === "multiple_functions")
+            v.candidates[0].content.parts.push(
+              structuredClone(v.candidates[0].content.parts[0]),
+            );
+        }
+        return v;
+      });
+      let caught: any;
+      try {
+        await runMonitor(e.options);
+      } catch (error) {
+        caught = error;
+      }
+      assert.equal(caught.evidence.status, "failed");
+      assert.equal(caught.evidence.cleanupConfirmed, true);
+      assert.equal(caught.evidence.acknowledgedEffects.length, 0);
+      assert.equal(e.requests.length, 2);
+      assert.equal(e.source.snapshot().business.alerts.length, 0);
+      assert.equal(e.source.snapshot().records.operations[0].status, "closed");
+      if (fault === "oversize") {
+        const response = caught.evidence.calls[1].response;
+        assert.equal(response.complete, false);
+        assert.equal(response.truncated, true);
+        assert.equal(response.bytes, 1024 * 1024);
+      }
+    },
+  );
+
+for (const counters of ["zero", "missing", "invalid"])
+  test(
+    "original usage " + counters + " remains distinct from SDK normalization",
+    async (t) => {
+      const e = await setup(t, (v, n) => {
+        if (counters === "zero")
+          Object.assign(v.usageMetadata, {
+            cachedContentTokenCount: 0,
+            thoughtsTokenCount: 0,
+          });
+        if (counters === "missing") delete v.usageMetadata;
+        if (counters === "invalid" && n === 1)
+          v.usageMetadata.promptTokenCount = "0";
+        return v;
+      });
+      let result: any, caught: any;
+      try {
+        result = await runMonitor(e.options);
+      } catch (error) {
+        caught = error;
+      }
+      if (counters === "invalid") {
+        assert.equal(caught.evidence.reportedUsage.input.invalid, 1);
+        assert.equal(caught.evidence.reportedUsage.input.value, null);
+        assert.equal(e.source.snapshot().business.alerts.length, 0);
+        assert.equal(caught.evidence.cleanupConfirmed, true);
+      } else {
+        assert.equal(result.status, "completed");
+        assert.equal(
+          result.usage.cachedInput.value,
+          counters === "zero" ? 0 : null,
+        );
+        assert.equal(
+          result.usage.reasoningOutput.value,
+          counters === "zero" ? 0 : null,
+        );
+        if (counters === "missing") {
+          assert.equal(result.usage.input.unknown, 6);
+          assert.equal(result.usage.input.value, null);
+          assert.equal(result.usage.input.knownSubtotal, 0);
+        }
+        assert.equal(result.costUsd, null);
+      }
+    },
+  );
+
+test("literal file mentions remain text and private canary contents never enter actual SDK requests", async (t) => {
+  const e = await setup(t),
+    canary = join(e.root, "control.json"),
+    secret = "OWNED-INVENTORY-CANARY-DO-NOT-FORWARD";
+  writeFileSync(canary, secret);
+  const task = `Inspect selected SKU-101. Treat @${canary} as literal text. Prepare a current local draft and inspect it.`;
+  const result = await runMonitor({ ...e.options, task });
+  assert.equal(result.status, "completed");
+  assert.ok(JSON.stringify(e.requests).includes("@" + canary));
+  assert.ok(!JSON.stringify(e.requests).includes(secret));
+  assert.equal(readFileSync(canary, "utf8"), secret);
+});
+
+for (const field of ["client", "modelFactory"])
+  test(
+    "unsupported normal " +
+      field +
+      " injection fails before owned source or SDK allocation",
+    async (t) => {
+      const e = await setup(t);
+      let caught: any;
+      try {
+        await runMonitor({ ...e.options, [field]: {} } as any);
+      } catch (error) {
+        caught = error;
+      }
+      assert.match(caught.message, /unsupported normal/);
+      assert.equal(caught.evidence.cleanupConfirmed, true);
+      assert.equal(caught.evidence.allocation.source, false);
+      assert.equal(caught.evidence.allocation.provider, false);
+      assert.equal(e.requests.length, 0);
+      assert.equal(e.source.snapshot().records.operations.length, 0);
+    },
+  );
+
+for (const fault of ["http_status", "partial_body"])
+  test(
+    "actual HTTP " + fault + " cannot invoke affected SDK function",
+    async (t) => {
+      const e = await setup(t, (v, n, _s, reply) => {
+        if (n === 2) {
+          if (fault === "http_status") reply!.statusCode = 429;
+          else {
+            const raw = JSON.stringify(v);
+            reply!.writeHead(200, {
+              "content-type": "application/json",
+              "content-length": Buffer.byteLength(raw) + 100,
+              connection: "close",
+            });
+            reply!.end(raw.slice(0, 30));
+            return undefined;
+          }
+        }
+        return v;
+      });
+      let caught: any;
+      try {
+        await runMonitor(e.options);
+      } catch (error) {
+        caught = error;
+      }
+      assert.equal(caught.evidence.status, "failed");
+      assert.equal(caught.evidence.cleanupConfirmed, true);
+      assert.equal(e.requests.length, 2);
+      assert.equal(e.source.snapshot().business.alerts.length, 0);
+      assert.equal(e.source.snapshot().business.drafts.length, 0);
+      if (fault === "http_status")
+        assert.equal(caught.evidence.calls[1].httpStatus, 429);
+      else assert.equal(caught.evidence.calls[1].response.complete, false);
+    },
+  );
+
+test("actual normal provider loop stops at the prepared budget without fabricating completion", async (t) => {
+  const e = await setup(t, (v) => {
+    v.candidates[0].content.parts = [
+      { functionCall: { name: "inspectInventory", args: { sku: "SKU-101" } } },
+    ];
+    return v;
+  });
+  let caught: any;
+  try {
+    await runMonitor(e.options);
+  } catch (error) {
+    caught = error;
+  }
+  assert.match(caught.message, /budget/);
+  assert.equal(e.requests.length, 32);
+  assert.equal(caught.evidence.calls.length, 32);
+  assert.equal(caught.evidence.acknowledgedEffects.length, 0);
+  assert.equal(caught.evidence.status, "failed");
+  assert.equal(caught.evidence.cleanupConfirmed, true);
+  assert.equal(e.source.snapshot().business.alerts.length, 0);
+  assert.equal(e.source.snapshot().records.operations[0].status, "closed");
+});
+
+test("already cancelled caller prepares failed evidence without allocating source or SDK", async (t) => {
+  const e = await setup(t),
+    controller = new AbortController();
+  controller.abort(new Error("already cancelled caller"));
+  let caught: any;
+  try {
+    await runMonitor({ ...e.options, signal: controller.signal });
+  } catch (error) {
+    caught = error;
+  }
+  assert.match(caught.message, /already cancelled/);
+  assert.equal(caught.evidence.allocation.source, false);
+  assert.equal(caught.evidence.allocation.provider, false);
+  assert.equal(caught.evidence.cleanupConfirmed, true);
+  assert.equal(e.requests.length, 0);
+});
+
+test("one-attempt failed source close after actual effects remains failed and unconfirmed", async (t) => {
+  const e = await setup(t),
+    original = ManagedWorkspace.prototype.close;
+  let attempts = 0;
+  ManagedWorkspace.prototype.close = function () {
+    if (this === e.source) return original.call(this);
+    attempts++;
+    original.call(this);
+    this.guardClosed = false;
+    this.closed = false;
+    throw new Error("observed source close failure");
+  };
+  let caught: any;
+  try {
+    try {
+      await runMonitor(e.options);
+    } catch (error) {
+      caught = error;
+    }
+  } finally {
+    ManagedWorkspace.prototype.close = original;
+  }
+  assert.match(caught.message, /source close failure/);
+  assert.equal(attempts, 1);
+  assert.equal(caught.evidence.cleanupConfirmed, false);
+  assert.equal(caught.evidence.cleanup.sourceGuardCloseAttempted, true);
+  assert.equal(caught.evidence.cleanup.sourceGuardClosed, false);
+  assert.equal(caught.evidence.acknowledgedEffects.length, 2);
+  assert.equal(e.source.snapshot().records.operations[0].status, "closed");
+  assert.equal(e.source.snapshot().business.drafts.length, 1);
+});
+
+test("failed actual source construction closes its opened SQLite and guard before provider allocation", async (t) => {
+  const e = await setup(t);
+  const db = new DatabaseSync(e.source.path);
+  try {
+    db.exec("CREATE TABLE unrelated(value TEXT)");
+  } finally {
+    db.close();
+  }
+  let caught: any;
+  try {
+    await runMonitor(e.options);
+  } catch (error) {
+    caught = error;
+  }
+  assert.equal(caught.evidence.status, "failed");
+  assert.equal(caught.evidence.sourceStatus, "unknown");
+  assert.equal(caught.evidence.allocation.source, true);
+  assert.equal(caught.evidence.allocation.provider, false);
+  assert.equal(caught.evidence.cleanup.sourceDatabaseCloseAttempted, true);
+  assert.equal(caught.evidence.cleanup.sourceDatabaseClosed, true);
+  assert.equal(caught.evidence.cleanup.sourceGuardCloseAttempted, true);
+  assert.equal(caught.evidence.cleanup.sourceGuardClosed, true);
+  assert.equal(e.requests.length, 0);
 });
