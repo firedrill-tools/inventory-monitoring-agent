@@ -15,6 +15,11 @@ import {
 } from "./domain.js";
 import { canonical, hash, keys, parseJSON } from "./json.js";
 import { projection, validateState } from "./schema.js";
+import {
+  populationFixture,
+  validatePopulationSeed,
+  type PopulationReference,
+} from "./populations.js";
 
 export const APPLICATION_ID = 0x4644494e,
   SCHEMA_VERSION = 1,
@@ -54,8 +59,8 @@ export type Header = {
   fixtureBase64: string;
   fixtureSha256: string;
   provenance: typeof PROVENANCE;
-  creation: "fixture";
-  population: null;
+  creation: "fixture" | "population";
+  population: PopulationReference | null;
 };
 export type Operation = {
   id: string;
@@ -276,8 +281,8 @@ export function header(
     !same(doc.identity, identity) ||
     !same(doc.provenance, PROVENANCE) ||
     (instanceId !== undefined && instanceId !== doc.instanceId) ||
-    doc.creation !== "fixture" ||
-    doc.population !== null
+    !["fixture", "population"].includes(doc.creation) ||
+    (doc.creation === "fixture" && doc.population !== null)
   )
     throw new Error(
       "original managed inventory identity/provenance/source differs",
@@ -291,7 +296,10 @@ export function header(
     hash(fixtureBytes) !== doc.fixtureSha256
   )
     throw new Error("original inventory fixture bytes/hash differ");
-  const fixture = validateState(parseJSON(fixtureBytes));
+  const fixture =
+    doc.creation === "population"
+      ? populationFixture(doc)
+      : validateState(parseJSON(fixtureBytes));
   return { doc, fixture, raw };
 }
 export function operation(value: unknown): asserts value is Operation {
@@ -334,14 +342,14 @@ export function snapshot(
     decisions: rows(db, "decisions", LIMITS.decisions, "sequence"),
     seed_state: rows(db, "seed_state", 1),
   };
-  if (
-    tables.business.length !== 1 ||
-    tables.business[0].id !== 1 ||
-    tables.seed_state.length
-  )
+  if (tables.business.length !== 1 || tables.business[0].id !== 1)
     throw new Error(
       "one current business source without unqualified seed authority required",
     );
+  if (doc.creation === "population")
+    validatePopulationSeed(doc, tables, originalSchema);
+  else if (tables.seed_state.length)
+    throw new Error("fixture source cannot import seed authority");
   const current = jsonCell(tables.business[0].document) as Business;
   const operations = tables.operations.map((r) => {
     const v = jsonCell(r.document);

@@ -1,0 +1,3 @@
+export const DATASET_BYTES = 1186196;
+export const DATASET_SHA256 = "18119cd361b2fbbd7dc55140134dbc593040f757740cdfab62ce8563914f7cb1";
+export const DATASET_CASES = 12;

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /** Private model-free source authoring/inspection, without model capabilities. */
 import { resolve } from "node:path";
 import { ManagedWorkspace } from "./managed.js";

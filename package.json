@@ -11,7 +11,9 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/tests/*.test.js",
     "inventory": "node dist/src/cli.js",
-    "inventory:state": "node dist/src/managed-cli.js"
+    "inventory:state": "node dist/src/managed-cli.js",
+    "inventory:cases": "node dist/src/cases-cli.js",
+    "check:populations": "node scripts/build-populations.mjs --check"
   },
   "dependencies": {
     "@ai-sdk/google": "2.0.85",

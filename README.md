@@ -65,3 +65,16 @@ Private0700/0600 receipts are prepared before keys/resources. They retain whole 
 82checks cover source/managed boundaries plus actual normal SDK/HTTP, original MAX_TOKENS/missing/duplicate/coerced arguments, original final failure after committed alert/draft, actual normal CLI and SIGINT/SIGTERM/SIGHUP, caller/parent/shared-deadline cancellation during held provider HTTP, missing key before allocation and original caller input frozen across launch. Scope is closed before abort/drain, then actual provider/source resources close once. Detailed close/recording/source failure and remaining original-response cases are still being qualified; twelve coherent private case/reset and fresh installations follow. Controlled local SDK outputs do not qualify live model semantics, billing or Firedrill.
 
 Current checkpoint:106checks pass, including remaining original-response/usage, readonly/current-event, partial HTTP, real32request bound, source/recording/provider/source-close/lock failures after effects and failed construction. Failed cleanup remains unconfirmed; damaged source is reported unknown and preserved. Private receipts distinguish actual applied effects from all managed decisions and retain actual tool returns plus SDK normalization. Owned HTTP phase timers are cleared and cancel through durable scope closure. Twelve coherent private worlds/reset and fresh installation qualification are next; this checkpoint is not independently complete.
+
+## Coherent private cases
+
+```sh
+npm run inventory:cases -- list
+npm run inventory:cases -- init --case busy_fresh_cycle --root workspace/case-one
+npm run inventory:cases -- inspect --root workspace/case-one
+npm run inventory:cases -- reset --root workspace/case-one --new-root workspace/case-two
+```
+
+There are three starter, busy, ambiguous and boundary cases. The busy world contains48items/96earlier events/16earlier alerts and drafts/128actual synthetic-human authoring steps. Cases cover current on-order eligibility, prior current versus superseded drafts, threshold/receipt changes during actual HTTP, recovery/reentry during a final answer, duplicate/reused IDs/unsafe receipt refusal and exact maximum integers/long SKU/hostile Unicode. Original bytes and complete history are pinned. Prior model/authentication/purchase evidence remains unknown. Fresh private seeds contain no model operations, observations or decisions.
+
+Inspection is private and model-free. Separate reset creates a new source/UUID/seed while preserving old files/effects/evidence. Missing/corrupt/foreign/copied/stripped controls, aliases/collisions and occupied mutexes refuse without repair. Case IDs, expected outcomes and during-provider setup never become model context or permissions. All45case checks pass, including actual normal SDK use of every profile and preservation after effects; full151and fresh installation/source artifact qualification are the remaining release gate.

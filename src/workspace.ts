@@ -31,7 +31,7 @@ export type { Item, InventoryEvent } from "./domain.js";
 export type { InventoryState } from "./schema.js";
 
 const identity = (s: { dev: bigint; ino: bigint }) => `${s.dev}:${s.ino}`;
-export function readOriginal(file: string) {
+export function readRegular(file: string) {
   const first = lstatSync(file, { bigint: true });
   if (
     !first.isFile() ||
@@ -63,11 +63,14 @@ export function readOriginal(file: string) {
     return {
       raw,
       identity: identity(before),
-      state: validateState(parseJSON(raw)),
     };
   } finally {
     closeSync(fd);
   }
+}
+export function readOriginal(file: string) {
+  const original = readRegular(file);
+  return { ...original, state: validateState(parseJSON(original.raw)) };
 }
 export function loadState(file: string): InventoryState {
   return readOriginal(resolve(file)).state;

@@ -85,6 +85,9 @@ export class ManagedWorkspace {
       throw error;
     }
   }
+  assertCurrentIdentity() {
+    this.guard();
+  }
   private guard() {
     if (this.closeAttempted || this.guardFd === null)
       throw new Error("managed inventory source is closed");
