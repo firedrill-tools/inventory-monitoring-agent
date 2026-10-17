@@ -1,6 +1,6 @@
 {
   "name": "inventory-monitoring-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -13,7 +13,9 @@
     "inventory": "node dist/src/cli.js",
     "inventory:state": "node dist/src/managed-cli.js",
     "inventory:cases": "node dist/src/cases-cli.js",
-    "check:populations": "node scripts/build-populations.mjs --check"
+    "check:populations": "node scripts/build-populations.mjs --check",
+    "package:source": "npm run build && node scripts/package-source.mjs",
+    "check:distribution": "node scripts/check-distribution.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "2.0.85",
@@ -31,5 +33,25 @@
         "argparse": "2.0.1"
       }
     }
-  }
+  },
+  "bin": {
+    "inventory": "dist/src/cli.js",
+    "inventory-state": "dist/src/managed-cli.js",
+    "inventory-cases": "dist/src/cases-cli.js"
+  },
+  "files": [
+    "dist/src",
+    "src",
+    "tests",
+    "scripts",
+    "fixtures",
+    "scenarios",
+    ".github",
+    "README.md",
+    "AGENTS.md",
+    "PLAN.md",
+    "COMPATIBILITY.md",
+    "tsconfig.json",
+    "npm-shrinkwrap.json"
+  ]
 }

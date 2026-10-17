@@ -77,4 +77,25 @@ npm run inventory:cases -- reset --root workspace/case-one --new-root workspace/
 
 There are three starter, busy, ambiguous and boundary cases. The busy world contains48items/96earlier events/16earlier alerts and drafts/128actual synthetic-human authoring steps. Cases cover current on-order eligibility, prior current versus superseded drafts, threshold/receipt changes during actual HTTP, recovery/reentry during a final answer, duplicate/reused IDs/unsafe receipt refusal and exact maximum integers/long SKU/hostile Unicode. Original bytes and complete history are pinned. Prior model/authentication/purchase evidence remains unknown. Fresh private seeds contain no model operations, observations or decisions.
 
-Inspection is private and model-free. Separate reset creates a new source/UUID/seed while preserving old files/effects/evidence. Missing/corrupt/foreign/copied/stripped controls, aliases/collisions and occupied mutexes refuse without repair. Case IDs, expected outcomes and during-provider setup never become model context or permissions. All45case checks pass, including actual normal SDK use of every profile and preservation after effects; full151and fresh installation/source artifact qualification are the remaining release gate.
+Inspection is private and model-free. Separate reset creates a new source/UUID/seed while preserving old files/effects/evidence. Missing/corrupt/foreign/copied/stripped controls, aliases/collisions and occupied mutexes refuse without repair. Case IDs, expected outcomes and during-provider setup never become model context or permissions. All151checks pass, including45case checks with actual normal SDK use of every profile and preservation after effects.
+
+## Installable private distributions
+
+```sh
+npm ci
+npm test
+npm run check:populations
+npm run check:distribution
+npm run package:source
+npm pack
+```
+
+The complete source archive includes original TypeScript, tests, deterministic population authoring, pinned data, compatibility repair, CI, lockfiles and precompiled runtime JavaScript. `MANIFEST.json` records every delivered file's original bytes, mode and SHA256. Its portable archive format has no checkout timestamps or platform compression variation. `scripts/verify-source.mjs ARCHIVE [EXTRACTED_ROOT]` verifies the full member set and optionally every extracted file. This manifest checks package integrity; it is not a signature.
+
+Production source installations use `npm ci --omit=dev` and precompiled `dist/src` without TypeScript. The actual npm package retains `npm-shrinkwrap.json`, runtime assets and the required install-time parser repair. Installed commands are `inventory`, `inventory-state` and `inventory-cases`. Package scripts require no paid model call. The distribution gate installs fresh complete source, fresh production-only source and an actual npm consumer outside checkout; it recreates the consumer from its generated lock and exercises all12private cases/resets, default starter, normal real SDK/owned HTTP, missing credentials, all three signals and unfinished final output after effects. Only the full source installation builds and runs all151checks. Receipts and source effects remain distinct from technical completion.
+
+Release qualification also requires exact pushed Linux success and equality with the downloaded complete source artifact. Live enabled provider/key/budget/semantic and billing review, new Firedrill qualification, real stock/supplier systems and publication/license decisions remain parked.
+
+npm12blocks dependency install scripts by default. If a consumer installation reports the parser repair blocked, run the installed package's declared `npm run postinstall` from its package directory, as with an `--ignore-scripts` installation. The qualifier does this explicit, version-guarded and idempotent repair and verifies installed YAML parsing/help/version; it does not change global npm script policy. npm10/11array and npm12object package reports are both accepted after checking the unique package name and filename.
+
+When embedding the npm tarball as a dependency in another package, copy this repository's scoped `overrides` object into that consumer's root `package.json` before installing. npm does not apply overrides declared by dependencies. The qualifier uses that explicit consumer configuration, recreates its lock, runs the guarded repair and verifies the actual nested parser contract. Ordinary standalone source installs already have this root configuration. The tarball alone does not propagate the override policy to a different consumer.
