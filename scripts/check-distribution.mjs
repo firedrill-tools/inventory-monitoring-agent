@@ -108,10 +108,9 @@ try {
   );
   verifyArchive(archive, production);
   const packed = JSON.parse(
-    run(
+    node(
       "npm-pack",
-      "npm",
-      ["pack", "--json", "--pack-destination", temporary],
+      ["scripts/package-npm.mjs", "--json", "--pack-destination", temporary],
       root,
     ),
   );

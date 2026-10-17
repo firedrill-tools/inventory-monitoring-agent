@@ -15,7 +15,8 @@
     "inventory:cases": "node dist/src/cases-cli.js",
     "check:populations": "node scripts/build-populations.mjs --check",
     "package:source": "npm run build && node scripts/package-source.mjs",
-    "check:distribution": "node scripts/check-distribution.mjs"
+    "check:distribution": "node scripts/check-distribution.mjs",
+    "package:npm": "npm run build && node scripts/package-npm.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "2.0.85",

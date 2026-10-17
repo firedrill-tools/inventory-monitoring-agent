@@ -87,7 +87,7 @@ npm test
 npm run check:populations
 npm run check:distribution
 npm run package:source
-npm pack
+npm run package:npm
 ```
 
 The complete source archive includes original TypeScript, tests, deterministic population authoring, pinned data, compatibility repair, CI, lockfiles and precompiled runtime JavaScript. `MANIFEST.json` records every delivered file's original bytes, mode and SHA256. Its portable archive format has no checkout timestamps or platform compression variation. `scripts/verify-source.mjs ARCHIVE [EXTRACTED_ROOT]` verifies the full member set and optionally every extracted file. This manifest checks package integrity; it is not a signature.
@@ -99,3 +99,5 @@ Release qualification also requires exact pushed Linux success and equality with
 npm12blocks dependency install scripts by default. If a consumer installation reports the parser repair blocked, run the installed package's declared `npm run postinstall` from its package directory, as with an `--ignore-scripts` installation. The qualifier does this explicit, version-guarded and idempotent repair and verifies installed YAML parsing/help/version; it does not change global npm script policy. npm10/11array and npm12object package reports are both accepted after checking the unique package name and filename.
 
 When embedding the npm tarball as a dependency in another package, copy this repository's scoped `overrides` object into that consumer's root `package.json` before installing. npm does not apply overrides declared by dependencies. The qualifier uses that explicit consumer configuration, recreates its lock, runs the guarded repair and verifies the actual nested parser contract. Ordinary standalone source installs already have this root configuration. The tarball alone does not propagate the override policy to a different consumer.
+
+`package:npm` uses npm11.21.0explicitly. Actual npm12.0.2pack excludes npm-shrinkwrap.json even when named in files; the complete source archive always retains both locks. The pinned pack command preserves the publishable shrinkwrap without changing global npm or patching vendor code. The qualifier checks that the installed consumer actually retains it. [npm's publishable lock documentation](https://docs.npmjs.com/cli/v11/configuring-npm/npm-shrinkwrap-json/) describes the npm11format; this requirement follows the original package contents observed in both tools.
