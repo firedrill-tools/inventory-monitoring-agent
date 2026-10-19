@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "2026-10-14",
+  "name": "Inventory monitoring \u2014 actual managed Mastra/Gemini workflow",
+  "target": {
+    "kind": "command",
+    "argv": [
+      "node",
+      "firedrill/target.mjs"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "starter_low",
+      "name": "starter_low run",
+      "input": {
+        "caseId": "starter_low",
+        "action": "run",
+        "task": "Inspect exact current inventory and explain the next step without writing alerts or drafts.",
+        "skus": [
+          "SKU-101"
+        ],
+        "allowWrites": false,
+        "intent": null
+      }
+    },
+    {
+      "id": "ambiguous_threshold_drop",
+      "name": "ambiguous_threshold_drop run",
+      "input": {
+        "caseId": "ambiguous_threshold_drop",
+        "action": "run",
+        "task": "Inspect exact current inventory and explain the next step without writing alerts or drafts.",
+        "skus": [
+          "SKU-101"
+        ],
+        "allowWrites": false,
+        "intent": null
+      }
+    },
+    {
+      "id": "busy_fresh_cycle",
+      "name": "busy_fresh_cycle inspect",
+      "input": {
+        "caseId": "busy_fresh_cycle",
+        "action": "inspect",
+        "task": "Inspect exact current inventory and explain the next step without writing alerts or drafts.",
+        "skus": [
+          "SKU-101"
+        ],
+        "allowWrites": false,
+        "intent": null
+      }
+    }
+  ],
+  "repetitions": 1,
+  "concurrency": 1,
+  "limits": {
+    "timeoutMs": 240000,
+    "maxRuns": 3,
+    "maxOutputBytes": 4194304
+  }
+}

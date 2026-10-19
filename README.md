@@ -101,3 +101,7 @@ npm12blocks dependency install scripts by default. If a consumer installation re
 When embedding the npm tarball as a dependency in another package, copy this repository's scoped `overrides` object into that consumer's root `package.json` before installing. npm does not apply overrides declared by dependencies. The qualifier uses that explicit consumer configuration, recreates its lock, runs the guarded repair and verifies the actual nested parser contract. Ordinary standalone source installs already have this root configuration. The tarball alone does not propagate the override policy to a different consumer.
 
 `package:npm` uses npm11.21.0explicitly. Actual npm12.0.2pack excludes npm-shrinkwrap.json even when named in files; the complete source archive always retains both locks. The pinned pack command preserves the publishable shrinkwrap without changing global npm or patching vendor code. The qualifier checks that the installed consumer actually retains it. [npm's publishable lock documentation](https://docs.npmjs.com/cli/v11/configuring-npm/npm-shrinkwrap-json/) describes the npm11format; this requirement follows the original package contents observed in both tools.
+
+## Current Firedrill integration
+
+Released CLI/SDK 2.2.2, current command invocation, remote operator MCP and recovery are documented in [firedrill/README.md](firedrill/README.md). Offline checks preserve actual private inventory/native key behavior and independent SKU/write intent. Authenticated persisted runs and live quality/cost remain separate parked gates.

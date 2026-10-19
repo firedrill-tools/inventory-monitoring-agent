@@ -6,6 +6,7 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const digest = (b) => createHash("sha256").update(b).digest("hex");
 const files = [];
 function walk(relative) {
+  if (relative.split("/").some(name => ["node_modules", ".runs"].includes(name))) return;
   const full = path.join(root, relative),
     st = fs.lstatSync(full);
   if (st.isSymbolicLink()) throw Error(`source symlink refused: ${relative}`);
@@ -20,6 +21,7 @@ function walk(relative) {
   else throw Error("source is not regular");
 }
 for (const p of [
+  "firedrill",
   "src",
   "tests",
   "scripts",

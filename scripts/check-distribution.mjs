@@ -73,6 +73,10 @@ try {
     production = path.join(prodBase, "package");
   run("full-install", "npm", ["ci", "--no-audit", "--no-fund"], full);
   const fullSuite = run("full-suite", "npm", ["test"], full);
+  if(!fs.existsSync(path.join(full,'firedrill/scenario.json'))||fs.existsSync(path.join(full,'firedrill/node_modules')))throw new Error('archive integration boundary differs');
+  run('firedrill-install','npm',['ci','--prefix','firedrill','--ignore-scripts','--no-audit','--no-fund'],full);
+  run('firedrill-integration','npm',['test','--prefix','firedrill'],full);
+
   assert.match(fullSuite, /(?:#|ℹ) tests 151\b/);
   assert.match(fullSuite, /(?:#|ℹ) pass 151\b/);
   assert.match(fullSuite, /(?:#|ℹ) fail 0\b/);

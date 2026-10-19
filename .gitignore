@@ -4,3 +4,6 @@ workspace.json
 artifacts/
 .env
 .DS_Store
+
+node_modules/
+.runs/
