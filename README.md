@@ -1,6 +1,8 @@
-# Inventory monitoring agent
+# Inventory monitoring agent with Mastra and TypeScript
 
 A Mastra agent using a Gemini model inspects synthetic inventory events, raises one alert per low-stock cycle, and prepares a local replenishment draft. Events carry IDs and sequence numbers so repeats and stale counts cannot change stock twice. Effective stock includes units already on order; a threshold change can create or clear an alert.
+
+Simulate this Mastra AI agent with [Firedrill](https://firedrill.run/), a simulation platform for AI agents. Start with the [Firedrill setup and simulation guide](firedrill/README.md); your coding agent can operate it while this application's runner stays in your repository or CI.
 
 ## Run locally
 
@@ -27,7 +29,7 @@ For a read-only inspection, omit write permission and intent. `--model`/`--base-
 
 The Mastra tools inspect current item state, evaluate an alert and prepare a replenishment draft using the item's current revision. Evaluation and draft preparation require `--allow-writes`; no purchasing or vendor API exists. The CLI's `event` command is the synthetic external event seam. Stocktakes set an absolute quantity, sales and receipts change it, and threshold events change the trigger. Repeated event IDs and old sequences are rejected. An event after a draft marks that draft superseded, and the next draft must use the new revision.
 
-Start an independent source from a fresh copy of `fixtures/starter.json`; preserve old source and evidence. The local JSON workspace is designed for sequential events, not concurrent production inventory. `npm test` covers the Mastra tool boundary, duplicate/stale events, effective stock, alert cycles, threshold changes and draft invalidation. These are offline checks, not a live Gemini run. Live provider and new Firedrill integration proofs remain pending.
+Start an independent source from a fresh copy of `fixtures/starter.json`; preserve old source and evidence. The local JSON workspace is designed for sequential events, not concurrent production inventory. `npm test` covers the Mastra tool boundary, duplicate/stale events, effective stock, alert cycles, threshold changes and draft invalidation. These are offline checks, not a live Gemini run. Live provider and Firedrill persistence proofs remain pending.
 
 The scoped argparse override removes the inherited `sprintf-js` dependency; a guarded install-time repair preserves js-yaml's legacy version option. See [scripts/README.md](scripts/README.md). The original dependency checkpoint passed fresh `npm ci`, seven checks and `npm audit` with zero findings at the 2026-10-15 snapshot. Current source checkpoint passes42checks; no new audit or native Gemini qualification is implied. This private repository has no license pending portfolio publication decisions.
 
@@ -94,7 +96,7 @@ The complete source archive includes original TypeScript, tests, deterministic p
 
 Production source installations use `npm ci --omit=dev` and precompiled `dist/src` without TypeScript. The actual npm package retains `npm-shrinkwrap.json`, runtime assets and the required install-time parser repair. Installed commands are `inventory`, `inventory-state` and `inventory-cases`. Package scripts require no paid model call. The distribution gate installs fresh complete source, fresh production-only source and an actual npm consumer outside checkout; it recreates the consumer from its generated lock and exercises all12private cases/resets, default starter, normal real SDK/owned HTTP, missing credentials, all three signals and unfinished final output after effects. Only the full source installation builds and runs all151checks. Receipts and source effects remain distinct from technical completion.
 
-Release qualification also requires exact pushed Linux success and equality with the downloaded complete source artifact. Live enabled provider/key/budget/semantic and billing review, new Firedrill qualification, real stock/supplier systems and publication/license decisions remain parked.
+Release qualification also requires exact pushed Linux success and equality with the downloaded complete source artifact. Live enabled provider/key/budget/semantic and billing review, authenticated Firedrill persistence verification, real stock/supplier systems and publication/license decisions remain parked.
 
 npm12blocks dependency install scripts by default. If a consumer installation reports the parser repair blocked, run the installed package's declared `npm run postinstall` from its package directory, as with an `--ignore-scripts` installation. The qualifier does this explicit, version-guarded and idempotent repair and verifies installed YAML parsing/help/version; it does not change global npm script policy. npm10/11array and npm12object package reports are both accepted after checking the unique package name and filename.
 
