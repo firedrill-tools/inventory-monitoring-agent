@@ -35,7 +35,7 @@ Start an independent source from a fresh copy of `fixtures/starter.json`; preser
 
 The scoped argparse override removes the inherited `sprintf-js` dependency; a guarded install-time repair preserves js-yaml's legacy version option. See [scripts/README.md](scripts/README.md). The original dependency checkpoint passed fresh `npm ci`, seven checks and `npm audit` with zero findings at the 2026-10-15 snapshot. Current source checkpoint passes42checks; no new audit or native Gemini qualification is implied. This repository is publicly viewable; no project license has been selected.
 
-Explore related applications in the [Firedrill example catalog](https://github.com/firedrill-tools/firedrill-example-catalog). Product and setup references: [Firedrill](https://firedrill.run/) and the [official developer documentation](https://docs.firedrill.run/). Use documentation matching the qualified release; this repository records its current integration limits above.
+Explore related applications in the [Firedrill examples](https://docs.firedrill.run/guides/examples). Product and setup references: [Firedrill](https://firedrill.run/) and the [official developer documentation](https://docs.firedrill.run/). Use documentation matching the qualified release; this repository records its current integration limits above.
 
 ## Current source contract
 
